@@ -1,3 +1,5 @@
+![Spinning pyramids](./assets/pyramids.gif)
+
 # WIP
 
 Simple 3D renderer for the terminal
