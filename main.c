@@ -23,6 +23,12 @@ static Camera camera = {
 	.up = { 0.0, 1.0, 0.0 },
 	.fov_y = 45
 };
+static Light light = {
+	.position = { 0.f, 5.f, 5.f },
+	.color = { 255, 225, 255 },
+	.ambient_strength = 0.1f,
+	.specular_strength = 0.3f
+};
 static Matrix4x4f m_view;
 static Matrix4x4f m_projection;
 static Object objects[10];
@@ -90,7 +96,7 @@ int main(int argc, char *argv[]) {
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 	int width = w.ws_col;
 	int height = w.ws_row;
-	init(width, height);
+	init(width, height, &camera, &light);
 	m_view = look_at(camera.position, camera.target, camera.up);
 	m_projection = perspective(camera.fov_y,  width / (float) height, near, far);
 

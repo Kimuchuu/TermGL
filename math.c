@@ -34,6 +34,10 @@ float vec3f_dot(Vec3f v1, Vec3f v2) {
 	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
+Vec3f vec3f_mult(Vec3f v1, Vec3f v2) {
+	return (Vec3f) { v1.x * v2.x, v1.y * v2.y, v1.z * v2.z };
+}
+
 Vec3f vec3f_normalize(Vec3f v) {
 	Vec3f result;
 	float magnitude = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
@@ -41,6 +45,10 @@ Vec3f vec3f_normalize(Vec3f v) {
 	result.y = v.y / magnitude;
 	result.z = v.z / magnitude;
 	return result;
+}
+
+Vec3f vec3f_reflect(Vec3f v, Vec3f n) {
+	return vec3f_sub(v, vec3f_scale(n, vec3f_dot(n, v) * 2.f));
 }
 
 Vec3f vec3f_scale(Vec3f v1, float s) {

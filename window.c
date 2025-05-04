@@ -33,9 +33,8 @@ static char *print_buffer;
 
 static char depth[] = { '@', '$', '#', '*', '!', '=', ';', ':', '~', '-', ',', '.' };
 
-static const Color light_color = { 255, 225, 255 };
-static const Vec3f light_pos = { 0.f, 0.f, -5.f };
-static const float ambient_strength = 0.1f;
+static Camera *camera;
+static Light *light;
 
 static void clear_buffers() {
 	for (int i = 0; i < view_height; i++) {
@@ -68,9 +67,11 @@ double get_time_ms() {
 	return ((double)timer.tv_nsec / 1000000.0) + ((double)timer.tv_sec * 1000.0);
 }
 
-void init(int width, int height) {
+void init(int width, int height, Camera *i_camera, Light *i_light) {
 	view_width = width;
 	view_height = height;
+	camera = i_camera;
+	light = i_light;
 
 	frame_buffer = malloc(height * width * sizeof(frame_buffer[0]));
 	z_buffer = malloc(height * width * sizeof(z_buffer[0]));
@@ -190,10 +191,6 @@ Vec3f create_normal(Vec4f *p0, Vec4f *p1, Vec4f *p2) {
 	return normal;
 }
 
-Vec3f vec3f_mul(Vec3f v1, Vec3f v2) {
-	return (Vec3f) { v1.x * v2.x, v1.y * v2.y, v1.z * v2.z };
-}
-
 void print_triangle(Point3D *p0, Point3D *p1, Point3D *p2, Matrix4x4f *m_model, Matrix4x4f *m_view, Matrix4x4f *m_projection) {
 	Matrix4x4f m_model_it = mat4f_inverse_transpose_affine(m_model);
 	PointAttrs a0 = create_point_attrs(p0, m_model, m_view, m_projection, &m_model_it);
@@ -210,7 +207,7 @@ void print_triangle(Point3D *p0, Point3D *p1, Point3D *p2, Matrix4x4f *m_model, 
 	unsigned int min_y = MAX(0, MIN(view_height - 1, floor(p_min_y)));
 	unsigned int max_y = MAX(0, MIN(view_height - 1, floor(p_max_y)));
 
-	Vec3f light_ucolor = color_to_ucolor(light_color);
+	Vec3f light_ucolor = color_to_ucolor(light->color);
 
 	Vec3f pos;
 	Color color;
@@ -263,12 +260,19 @@ void print_triangle(Point3D *p0, Point3D *p1, Point3D *p2, Matrix4x4f *m_model, 
 					Vec3f fragment_world_normal_normalized = vec3f_normalize(fragment_world_normal);
 					Vec3f fragment_color_base = vec3f_scale(interpolated_ucolor_over_w_raw, one_over_interpolated_one_over_w_raw);
 
+					Vec3f light_direction = vec3f_normalize(vec3f_sub(light->position, fragment_world_pos));
+					Vec3f view_direction = vec3f_normalize(vec3f_sub(camera->position, fragment_world_pos));
+					Vec3f reflect_direction = vec3f_reflect(vec3f_scale(light_direction, -1.f), fragment_world_normal_normalized);
 
-					Vec3f light_direction = vec3f_normalize(vec3f_sub(light_pos, fragment_world_pos));
+					Vec3f ambient_ucolor = vec3f_scale(light_ucolor, light->ambient_strength);
 					float diffuse_strength = MAX(vec3f_dot(fragment_world_normal_normalized, light_direction), 0.f);
-					Vec3f diffuse_ucolor = vec3f_mul(fragment_color_base, vec3f_scale(light_ucolor, diffuse_strength));
-					Vec3f ambient_ucolor = vec3f_mul(fragment_color_base, vec3f_scale(light_ucolor, ambient_strength));
-					Vec3f final_color = vec3f_add(ambient_ucolor, diffuse_ucolor);
+					Vec3f diffuse_ucolor = vec3f_scale(light_ucolor, diffuse_strength);
+					float spec = powf(MAX(vec3f_dot(view_direction, reflect_direction), 0.f), 32.f);
+					Vec3f specular_ucolor = vec3f_scale(light_ucolor, light->specular_strength * spec);
+
+					Vec3f final_color = vec3f_mult(
+						vec3f_add(vec3f_add(ambient_ucolor, diffuse_ucolor), specular_ucolor),
+						fragment_color_base);
 
 					color.red = MAX(0, MIN(255, (final_color.x * 255.f)));
 					color.green = MAX(0, MIN(255, (final_color.y * 255.f)));
