@@ -72,11 +72,12 @@ Matrix4x4f mat4f_rotate_xy(float angle) {
 }
 
 void draw(unsigned int frame, double time, double delta) {
-	float degrees = sin(time * 0.000007) * 180;
+	static float degrees = 0.f;
+	degrees += (delta / 1000.f) * 90.f;
 
 	for (int i = 0; i < n_objects; i++) {
 		Matrix4x4f translate = mat4f_translate(objects[i].position);
-		Matrix4x4f rotate = mat4f_rotate_zx(degrees);
+		Matrix4x4f rotate = mat4f_rotate_zx(radians(degrees));
 		Matrix4x4f model = mat4f_identity(1);
 		model = mat4f_mult(&model, &translate);
 		model = mat4f_mult(&model, &rotate);
