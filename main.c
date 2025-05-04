@@ -3,7 +3,6 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <math.h>
 #include <limits.h>
 #include <float.h>
 #include "math.h"
@@ -34,50 +33,13 @@ static Matrix4x4f m_projection;
 static Object objects[10];
 static int n_objects;
 
-
-Matrix4x4f mat4f_rotate_zx(float angles) {
-	float c = cosf(angles);
-	float s = sinf(angles);
-	Matrix4x4f result = {{
-		{   c, 0.f,   s, 0.f },
-		{ 0.f, 1.f, 0.f, 0.f },
-		{  -s, 0.f,   c, 0.f },
-		{ 0.f, 0.f, 0.f, 1.f }
-	}};
-	return result;
-}
-
-Matrix4x4f mat4f_rotate_yz(float angle) {
-	float c = cosf(angle);
-	float s = sinf(angle);
-	Matrix4x4f result = {{
-		{ 1.f, 0.f, 0.f, 0.f },
-		{ 0.f,   c,  -s, 0.f },
-		{ 0.f,   s,   c, 0.f },
-		{ 0.f, 0.f, 0.f, 1.f }
-	}};
-	return result;
-}
-
-Matrix4x4f mat4f_rotate_xy(float angle) {
-	float c = cosf(angle);
-	float s = sinf(angle);
-	Matrix4x4f result = {{
-		{   c,  -s, 0.f, 0.f },
-		{   s,   c, 0.f, 0.f },
-		{ 0.f, 0.f, 1.f, 0.f },
-		{ 0.f, 0.f, 0.f, 1.f }
-	}};
-	return result;
-}
-
 void draw(unsigned int frame, double time, double delta) {
 	static float degrees = 0.f;
 	degrees += (delta / 1000.f) * 90.f;
 
 	for (int i = 0; i < n_objects; i++) {
 		Matrix4x4f translate = mat4f_translate(objects[i].position);
-		Matrix4x4f rotate = mat4f_rotate_zx(radians(degrees));
+		Matrix4x4f rotate = mat4f_rotate_x(radians(degrees));
 		Matrix4x4f model = mat4f_identity(1);
 		model = mat4f_mult(&model, &translate);
 		model = mat4f_mult(&model, &rotate);

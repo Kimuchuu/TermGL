@@ -223,6 +223,43 @@ Vec4f mat4f_multv(Matrix4x4f *matrix, Vec4f *vector) {
 	return result;
 }
 
+Matrix4x4f mat4f_rotate_y(float angles) {
+	float c = cosf(angles);
+	float s = sinf(angles);
+	Matrix4x4f result = {{
+		{   c, 0.f,   s, 0.f },
+		{ 0.f, 1.f, 0.f, 0.f },
+		{  -s, 0.f,   c, 0.f },
+		{ 0.f, 0.f, 0.f, 1.f }
+	}};
+	return result;
+}
+
+Matrix4x4f mat4f_rotate_x(float angle) {
+	float c = cosf(angle);
+	float s = sinf(angle);
+	Matrix4x4f result = {{
+		{ 1.f, 0.f, 0.f, 0.f },
+		{ 0.f,   c,  -s, 0.f },
+		{ 0.f,   s,   c, 0.f },
+		{ 0.f, 0.f, 0.f, 1.f }
+	}};
+	return result;
+}
+
+Matrix4x4f mat4f_rotate_z(float angle) {
+	float c = cosf(angle);
+	float s = sinf(angle);
+	Matrix4x4f result = {{
+		{   c,  -s, 0.f, 0.f },
+		{   s,   c, 0.f, 0.f },
+		{ 0.f, 0.f, 1.f, 0.f },
+		{ 0.f, 0.f, 0.f, 1.f }
+	}};
+	return result;
+}
+
+
 Matrix4x4f mat4f_translate(Vec3f v) {
 	Matrix4x4f result = {{
 		{ 1.f, 0.f, 0.f, v.x },

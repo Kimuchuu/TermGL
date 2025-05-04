@@ -29,6 +29,9 @@ Matrix4x4f mat4f_identity(float);
 Matrix4x4f mat4f_inverse_transpose_affine(const Matrix4x4f*);
 Matrix4x4f mat4f_mult(Matrix4x4f *m1, Matrix4x4f *m2);
 Vec4f      mat4f_multv(Matrix4x4f *matrix, Vec4f *vector);
+Matrix4x4f mat4f_rotate_y(float angles);
+Matrix4x4f mat4f_rotate_x(float angle);
+Matrix4x4f mat4f_rotate_z(float angle);
 Matrix4x4f mat4f_translate(Vec3f);
 
 Matrix4x4f look_at(Vec3f position, Vec3f target, Vec3f up);

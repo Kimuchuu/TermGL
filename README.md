@@ -6,7 +6,7 @@ Simple 3D renderer for the terminal
 
 ## TODO
 
-- Rotation (Quadrons or smth idk)
+- Better rotations
 - Better APIs for defining shapes and light
 - Implement lighting
     - Character density version
