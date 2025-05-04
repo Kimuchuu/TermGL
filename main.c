@@ -39,7 +39,7 @@ void draw(unsigned int frame, double time, double delta) {
 
 	for (int i = 0; i < n_objects; i++) {
 		Matrix4x4f translate = mat4f_translate(objects[i].position);
-		Matrix4x4f rotate = mat4f_rotate_x(radians(degrees));
+		Matrix4x4f rotate = mat4f_rotate_y(radians(degrees));
 		Matrix4x4f model = mat4f_identity(1);
 		model = mat4f_mult(&model, &translate);
 		model = mat4f_mult(&model, &rotate);
