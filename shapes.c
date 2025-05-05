@@ -131,8 +131,8 @@ Polygon s_pyramid(float width, float height, float depth) {
 	Polygon polygon;
 	polygon.n_points = 5;
 	polygon.points = malloc(polygon.n_points * sizeof(Point3D));
-	polygon.faces = malloc(3 * 6 * sizeof(int));
 	polygon.n_faces = 6;
+	polygon.faces = malloc(3 * polygon.n_faces * sizeof(int));
 
 	float wh = width / 2;
 	float hh = height / 2;
