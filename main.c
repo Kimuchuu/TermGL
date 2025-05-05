@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
 		{ -8, 0, -10 }
 	};
 	objects[n_objects++] = (Object) {
-		s_pyramid(8, 4, 8),
+		s_cube(8, 4, 8),
 		{ 8, -3, -20 }
 	};
 

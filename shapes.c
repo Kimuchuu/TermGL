@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "math.h"
-#include "window.h"
+#include "shapes.h"
 
 #define EPSILON 1e-6
 
@@ -47,6 +47,84 @@ void add_vertex_normals(Polygon *polygon) {
 						 ? vec3f_normalize(points[i].normal)
 						 : (Vec3f) { 0.f, 0.f, 0.f };
 	}
+}
+
+Polygon s_cube(float width, float height, float depth) {
+	Polygon polygon;
+	polygon.n_points = 8;
+	polygon.points = malloc(polygon.n_points * sizeof(Point3D));
+	polygon.n_faces = 12;
+	polygon.faces = malloc(3 * polygon.n_faces * sizeof(int));
+
+	float wh = width / 2;
+	float hh = height / 2;
+	float dh = depth / 2;
+
+	int i = 0;
+
+	int bfl = set_point(polygon.points, i++, (Point3D) {
+		{ -wh, -hh, dh },
+		{ 255, 0, 0}
+	});
+	int bfr = set_point(polygon.points, i++, (Point3D) {
+		{ wh, -hh, dh },
+		{ 0, 255, 0}
+	});
+	int bbl = set_point(polygon.points, i++, (Point3D) {
+		{ -wh, -hh, -dh },
+		{ 255, 0, 0}
+	});
+	int bbr = set_point(polygon.points, i++, (Point3D) {
+		{ wh, -hh, -dh },
+		{ 0, 255, 0}
+	});
+	int tfl = set_point(polygon.points, i++, (Point3D) {
+		{ -wh, hh, dh },
+		{ 255, 0, 0}
+	});
+	int tfr = set_point(polygon.points, i++, (Point3D) {
+		{ wh, hh, dh },
+		{ 0, 255, 0}
+	});
+	int tbl = set_point(polygon.points, i++, (Point3D) {
+		{ -wh, hh, -dh },
+		{ 255, 0, 0}
+	});
+	int tbr = set_point(polygon.points, i++, (Point3D) {
+		{ wh, hh, -dh },
+		{ 0, 255, 0}
+	});
+
+	int order[12 * 3] = {
+		// FRONT
+		bfl, bfr, tfl,
+		bfr, tfr, tfl,
+
+		// RIGHT
+		bfr, bbr, tfr,
+		bbr, tbr, tfr,
+
+		// BACK
+		bbr, bbl, tbr,
+		bbl, tbl, tbr,
+
+		// LEFT
+		bbl, bfl, tbl,
+		bfl, tfl, tbl,
+
+		// TOP
+		tfl, tfr, tbl,
+		tfr, tbr, tbl,
+
+		// BOTTOM
+		bbl, bbr, bfl,
+		bbr, bfr, bfl,
+	};
+
+	memcpy(polygon.faces, order, sizeof(order));
+	add_vertex_normals(&polygon);
+
+	return polygon;
 }
 
 Polygon s_pyramid(float width, float height, float depth) {
