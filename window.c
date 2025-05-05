@@ -83,10 +83,10 @@ void init(int width, int height, Camera *i_camera, Light *i_light) {
 }
 
 void cleanup() {
+	printf("\x1b[?25h"); // Show cursor
 	free(print_buffer);
 	free(z_buffer);
 	free(frame_buffer);
-	printf("\x1b[?25h"); // Show cursor
 }
 
 void loop(int fps, void (*fn) (unsigned, double, double)) {
