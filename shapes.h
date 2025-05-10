@@ -4,7 +4,9 @@
 #include "window.h"
 #include "math.h"
 
+Polygon s_circle(float radius, int steps);
 Polygon s_cube(float width, float height, float depth);
 Polygon s_pyramid(float width, float height, float depth);
+Polygon s_sphere(float radius, int stacks, int sectors);
 
 #endif

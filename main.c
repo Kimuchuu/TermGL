@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 		{ 0, 5, -12 }
 	};
 	objects[n_objects++] = (Object) {
-		s_pyramid(8, 4, 8),
+		s_sphere(2, 8, 8),
 		{ -8, 0, -10 }
 	};
 	objects[n_objects++] = (Object) {

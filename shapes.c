@@ -49,6 +49,51 @@ void add_vertex_normals(Polygon *polygon) {
 	}
 }
 
+Polygon s_circle(float radius, int steps) {
+	Polygon polygon;
+	polygon.n_points = steps + 1;
+	polygon.points = malloc(polygon.n_points * sizeof(Point3D));
+	polygon.n_faces = steps;
+	polygon.faces = malloc(3 * polygon.n_faces * sizeof(int));
+
+	float b = (M_PI * 2.0) / steps;
+	float b_cos = cosf(b);
+	float b_sin = sinf(b);
+
+	polygon.points[0] = (Point3D) {
+		{ 0, 0, 0 },
+		{ 255, 200, 30 }
+	};
+	polygon.points[1] = (Point3D) {
+		{ 0, radius, 0 },
+		{ 0, 0, 255 / steps }
+	};
+
+	Vec3f last_pos;
+	Vec3f new_pos;
+	for (int i = 2; i < polygon.n_points; i++) {
+		last_pos = polygon.points[i - 1].position;
+		polygon.points[i].position = (Vec3f) {
+			last_pos.x * b_cos - last_pos.y * b_sin,
+			last_pos.y * b_cos + last_pos.x * b_sin,
+			0
+		};
+		polygon.points[i].color = (Color){ 0, 0, 255/steps * i};
+	}
+
+	int order[polygon.n_faces * 3];
+	for (int i = 0; i < polygon.n_faces; i++) {
+		order[i * 3] = 0;
+		order[i * 3 + 1] = i + 1;
+		order[i * 3 + 2] = ((i + 1) % polygon.n_faces) + 1;
+	}
+
+	memcpy(polygon.faces, order, sizeof(order));
+	add_vertex_normals(&polygon);
+
+	return polygon;
+}
+
 Polygon s_cube(float width, float height, float depth) {
 	Polygon polygon;
 	polygon.n_points = 8;
@@ -172,6 +217,71 @@ Polygon s_pyramid(float width, float height, float depth) {
 
 	memcpy(polygon.faces, order, sizeof(order));
 	add_vertex_normals(&polygon);
+
+	return polygon;
+}
+
+Polygon s_sphere(float radius, int stacks, int sectors) {
+	Polygon polygon;
+	polygon.n_points = (stacks + 1) * (sectors + 1);
+	polygon.points = malloc(polygon.n_points * sizeof(Point3D));
+	polygon.n_faces = (stacks - 1) * sectors * 2;
+	polygon.faces = malloc(3 * polygon.n_faces * sizeof(int));
+
+	float x, y, z, xy;
+	float nx, ny, nz, length_inv = 1.0f / radius;
+
+	float sector_step = 2 * M_PI / sectors;
+	float stack_step = M_PI / stacks;
+	float sector_angle, stack_angle;
+
+	int points_index = 0;
+	for (int i = 0; i <= stacks; i++) {
+		stack_angle = M_PI / 2 - i * stack_step;
+		xy = radius * cosf(stack_angle);
+		z = radius * sinf(stack_angle);
+
+		for (int j = 0; j <= sectors; j++) {
+			sector_angle = j * sector_step;
+
+			x = xy * cosf(sector_angle);
+			y = xy * sinf(sector_angle);
+
+			nx = x * length_inv;
+			ny = y * length_inv;
+			nz = z * length_inv;
+
+			polygon.points[points_index++] = (Point3D) {
+				{ x, y, z },
+				{ (255 / stacks) * (stacks - i), (255 / stacks) * i, 40 },
+				{ nx, ny, nz }
+			};
+		}
+	}
+
+	int order[polygon.n_faces * 3];
+	int order_index = 0;
+	int k1, k2;
+	for (int i = 0; i < stacks; i++) {
+		k1 = i * (sectors + 1);
+		k2 = k1 + sectors + 1;
+
+		for (int j = 0; j < sectors; j++, k1++, k2++) {
+			if (i != 0) {
+				order[order_index++] = k1;
+				order[order_index++] = k2;
+				order[order_index++] = k1 + 1;
+			}
+
+			if (i != (stacks - 1)) {
+				order[order_index++] = k1 + 1;
+				order[order_index++] = k2;
+				order[order_index++] = k2 + 1;
+			}
+		}
+	}
+
+	memcpy(polygon.faces, order, sizeof(order));
 
 	return polygon;
 }
