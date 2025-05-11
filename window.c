@@ -84,6 +84,7 @@ void init(int width, int height, Camera *i_camera, Light *i_light) {
 
 void cleanup() {
 	printf("\x1b[?25h"); // Show cursor
+	fflush(stdout);
 	free(print_buffer);
 	free(z_buffer);
 	free(frame_buffer);
