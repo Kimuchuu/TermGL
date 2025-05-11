@@ -10,6 +10,11 @@
 #define MIN(x, y) (x < y ? x : y)
 #define MAX(x, y) (x > y ? x : y)
 
+typedef struct {
+	int c;
+	Color color;
+} Pixel;
+
 static struct timespec timer;
 
 typedef struct {

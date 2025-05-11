@@ -1,24 +1,7 @@
 #ifndef LIB3C_WINDOW_H
 #define LIB3C_WINDOW_H
 
-#include "math.h"
-
-typedef struct {
-	unsigned char red;
-	unsigned char green;
-	unsigned char blue;
-} Color;
-
-typedef struct {
-	int c;
-	Color color;
-} Pixel;
-
-typedef struct {
-	Vec3f position;
-	Color color;
-	Vec3f normal;
-} Point3D;
+#include "model.h"
 
 typedef struct {
 	Vec3f position;
@@ -33,13 +16,6 @@ typedef struct {
 	float ambient_strength;
 	float specular_strength;
 } Light;
-
-typedef struct {
-	Point3D *points;
-	int n_points;
-	int n_faces;
-	int *faces;
-} Polygon;
 
 void cleanup();
 void init(int width, int height, Camera *camera, Light *light);
