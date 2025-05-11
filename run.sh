@@ -2,5 +2,5 @@
 
 set -e
 
-make
+make 3c
 ./out/3c
