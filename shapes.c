@@ -70,7 +70,6 @@ Polygon s_circle(float radius, int steps) {
 	};
 
 	Vec3f last_pos;
-	Vec3f new_pos;
 	for (int i = 2; i < polygon.n_points; i++) {
 		last_pos = polygon.points[i - 1].position;
 		polygon.points[i].position = (Vec3f) {
