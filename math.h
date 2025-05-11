@@ -32,6 +32,7 @@ Vec4f      mat4f_multv(Matrix4x4f *matrix, Vec4f *vector);
 Matrix4x4f mat4f_rotate_y(float angles);
 Matrix4x4f mat4f_rotate_x(float angle);
 Matrix4x4f mat4f_rotate_z(float angle);
+Matrix4x4f mat4f_scale(Vec3f scale);
 Matrix4x4f mat4f_translate(Vec3f);
 
 Matrix4x4f look_at(Vec3f position, Vec3f target, Vec3f up);

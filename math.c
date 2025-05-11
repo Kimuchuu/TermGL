@@ -259,6 +259,15 @@ Matrix4x4f mat4f_rotate_z(float angle) {
 	return result;
 }
 
+Matrix4x4f mat4f_scale(Vec3f s) {
+	Matrix4x4f result = {{
+		{ s.x, 0.f, 0.f, 0.f },
+		{ 0.f, s.y, 0.f, 0.f },
+		{ 0.f, 0.f, s.z, 0.f },
+		{ 0.f, 0.f, 0.f, 1.f }
+	}};
+	return result;
+}
 
 Matrix4x4f mat4f_translate(Vec3f v) {
 	Matrix4x4f result = {{
