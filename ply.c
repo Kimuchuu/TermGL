@@ -14,7 +14,7 @@ Polygon parse_ply(FILE *fp) {
 	// index positions of relevant properties
 	int i_x  = -1, i_y  = -1, i_z  = -1,
 	 	i_nx = -1, i_ny = -1, i_nz = -1,
-	 	i_r  = -1, i_g  = -1, i_b;
+	 	i_r  = -1, i_g  = -1, i_b  = -1;
 
 	if (fgets(characters, 300, fp) == NULL) {
 		perror("Unable to parse file");
