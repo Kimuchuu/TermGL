@@ -7,7 +7,8 @@
 // properties: x,y,z nx,ny,nz, red,green,blue r,g,b vertex_index
 
 Polygon parse_ply(FILE *fp) {
-	char characters[300];
+	size_t n = 300;
+	char *lineptr = malloc(n);
 	int section_count;
 	Polygon obj;
 
@@ -16,36 +17,36 @@ Polygon parse_ply(FILE *fp) {
 	 	i_nx = -1, i_ny = -1, i_nz = -1,
 	 	i_r  = -1, i_g  = -1, i_b  = -1;
 
-	if (fgets(characters, 300, fp) == NULL) {
+	if (getline(&lineptr, &n, fp) == -1) {
 		perror("Unable to parse file");
 		exit(1);
 	}
-	if (strcmp(characters, "ply\n") != 0) {
+	if (strcmp(lineptr, "ply\n") != 0) {
 		fprintf(stderr, "File must start with ply");
 		exit(1);
 	}
-	if (fgets(characters, 300, fp) == NULL) {
+	if (getline(&lineptr, &n, fp) == -1) {
 		perror("Unable to parse file");
 		exit(1);
 	}
-	if (strcmp(characters, "format ascii 1.0\n") != 0) {
+	if (strcmp(lineptr, "format ascii 1.0\n") != 0) {
 		fprintf(stderr, "Format must be ascii 1.0");
 		exit(1);
 	}
 
 	int property_index = 0;
-	while (fgets(characters, 300, fp) != NULL) {
-		if (strncmp("end_header", characters, 10) == 0) {
+	while (getline(&lineptr, &n, fp) != -1) {
+		if (strncmp("end_header", lineptr, 10) == 0) {
 			break;
 		}
-		if (strncmp("comment", characters, 7) == 0) {
+		if (strncmp("comment", lineptr, 7) == 0) {
 			continue;
 		}
-		if (strncmp("element", characters, 7) == 0) {
+		if (strncmp("element", lineptr, 7) == 0) {
 			char element[10];
 			int value;
 			property_index = 0;
-			if (sscanf(characters, "element %s %d", element, &value) != 2) {
+			if (sscanf(lineptr, "element %s %d", element, &value) != 2) {
 				fprintf(stderr, "Error parsing element '%s' with value '%d'\n", element, value);
 				exit(1);
 			} else if (strcmp("vertex", element) == 0) {
@@ -56,16 +57,16 @@ Polygon parse_ply(FILE *fp) {
 				fprintf(stderr, "Invalid element type '%s'", element);
 				exit(1);
 			}
-		} else if (strncmp("property", characters, 7) == 0) {
+		} else if (strncmp("property", lineptr, 7) == 0) {
 			char type[10];
-			char name[10];
-			if (sscanf(characters, "property %s\n", type) != 1) {
-				fprintf(stderr, "Error parsing line '%s'\n", characters);
+			char name[50];
+			if (sscanf(lineptr, "property %s\n", type) != 1) {
+				fprintf(stderr, "Error parsing line '%s'\n", lineptr);
 				exit(1);
 			} else if (strncmp("list", type, 4) == 0) {
 				// TODO: list
 			} else {
-				sscanf(characters, "property %s %s\n", type, name);
+				sscanf(lineptr, "property %s %s\n", type, name);
 				if (strcmp("x", name) == 0) {
 					i_x = property_index;
 				} else if (strcmp("y", name) == 0) {
@@ -95,10 +96,10 @@ Polygon parse_ply(FILE *fp) {
 	float x, y, z;
 	float nx, ny, nz;
 	unsigned char r = 255, g = 255, b = 255; // default
-	while (section_count++ < obj.n_points && fgets(characters, 300, fp) != NULL) {
+	while (section_count++ < obj.n_points && getline(&lineptr, &n, fp) != -1) {
 		property_index = 0;
-		char *end, *start = characters;
-		while ((end = index(start, ' ')) != NULL) {
+		char *end, *start = lineptr;
+		while ((end = strchr(start, ' ')) != NULL) {
 			*end = '\0';
 			if (i_x == property_index) {
 				x = atof(start);
@@ -138,8 +139,8 @@ Polygon parse_ply(FILE *fp) {
 	obj.faces = malloc(obj.n_faces * 3 * sizeof(int));
 	section_count = 0;
 	int order_index = 0;
-	while (section_count++ < obj.n_faces && fgets(characters, 300, fp) != NULL) {
-		sscanf(characters, "%d %d %d %d %d", &face_vertices, &i1, &i2, &i3, &i4);
+	while (section_count++ < obj.n_faces && getline(&lineptr, &n, fp) != -1) {
+		sscanf(lineptr, "%d %d %d %d %d", &face_vertices, &i1, &i2, &i3, &i4);
 		obj.faces[order_index++] = i1;
 		obj.faces[order_index++] = i2;
 		obj.faces[order_index++] = i3;
@@ -153,6 +154,7 @@ Polygon parse_ply(FILE *fp) {
 		}
 	}
 
+	free(lineptr);
 	return obj;
 }
 
