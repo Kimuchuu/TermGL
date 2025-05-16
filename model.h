@@ -3,11 +3,7 @@
 
 #include "math.h"
 
-typedef struct {
-	unsigned char red;
-	unsigned char green;
-	unsigned char blue;
-} Color;
+typedef Vec3f Color;
 
 typedef struct {
 	Vec3f position;

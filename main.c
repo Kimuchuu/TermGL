@@ -24,7 +24,7 @@ static Camera camera = {
 };
 static Light light = {
 	.position = { 0.f, 5.f, 5.f },
-	.color = { 255, 225, 255 },
+	.color = { 1.f, 1.f, 1.f },
 	.ambient_strength = 0.1f,
 	.specular_strength = 0.3f
 };

@@ -62,11 +62,11 @@ Polygon s_circle(float radius, int steps) {
 
 	polygon.points[0] = (Point3D) {
 		{ 0, 0, 0 },
-		{ 255, 200, 30 }
+		{ 1, 1, 0.1f }
 	};
 	polygon.points[1] = (Point3D) {
 		{ 0, radius, 0 },
-		{ 0, 0, 255 / steps }
+		{ 0, 0, 1.f / steps }
 	};
 
 	Vec3f last_pos;
@@ -77,7 +77,7 @@ Polygon s_circle(float radius, int steps) {
 			last_pos.y * b_cos + last_pos.x * b_sin,
 			0
 		};
-		polygon.points[i].color = (Color){ 0, 0, 255/steps * i};
+		polygon.points[i].color = (Color){ 0, 0, 1.f/steps * i};
 	}
 
 	int order[polygon.n_faces * 3];
@@ -108,35 +108,35 @@ Polygon s_cube(float width, float height, float depth) {
 
 	int bfl = set_point(polygon.points, i++, (Point3D) {
 		{ -wh, -hh, dh },
-		{ 255, 0, 0}
+		{ 1.f, 0, 0}
 	});
 	int bfr = set_point(polygon.points, i++, (Point3D) {
 		{ wh, -hh, dh },
-		{ 0, 255, 0}
+		{ 0, 1.f, 0}
 	});
 	int bbl = set_point(polygon.points, i++, (Point3D) {
 		{ -wh, -hh, -dh },
-		{ 255, 0, 0}
+		{ 1.f, 0, 0}
 	});
 	int bbr = set_point(polygon.points, i++, (Point3D) {
 		{ wh, -hh, -dh },
-		{ 0, 255, 0}
+		{ 0, 1.f, 0}
 	});
 	int tfl = set_point(polygon.points, i++, (Point3D) {
 		{ -wh, hh, dh },
-		{ 255, 0, 0}
+		{ 1.f, 0, 0}
 	});
 	int tfr = set_point(polygon.points, i++, (Point3D) {
 		{ wh, hh, dh },
-		{ 0, 255, 0}
+		{ 0, 1.f, 0}
 	});
 	int tbl = set_point(polygon.points, i++, (Point3D) {
 		{ -wh, hh, -dh },
-		{ 255, 0, 0}
+		{ 1.f, 0, 0}
 	});
 	int tbr = set_point(polygon.points, i++, (Point3D) {
 		{ wh, hh, -dh },
-		{ 0, 255, 0}
+		{ 0, 1.f, 0}
 	});
 
 	int order[12 * 3] = {
@@ -186,23 +186,23 @@ Polygon s_pyramid(float width, float height, float depth) {
 
 	int fl = set_point(polygon.points, i++, (Point3D) {
 		{ -wh, -hh, dh },
-		{ 255, 0, 0}
+		{ 1.f, 0, 0}
 	});
 	int fr = set_point(polygon.points, i++, (Point3D) {
 		{ wh, -hh, dh },
-		{ 0, 255, 0}
+		{ 0, 1.f, 0}
 	});
 	int bl = set_point(polygon.points, i++, (Point3D) {
 		{ -wh, -hh, -dh },
-		{ 255, 0, 0}
+		{ 1.f, 0, 0}
 	});
 	int br = set_point(polygon.points, i++, (Point3D) {
 		{ wh, -hh, -dh },
-		{ 0, 255, 0}
+		{ 0, 1.f, 0}
 	});
 	int top = set_point(polygon.points, i++, (Point3D) {
 		{ 0, hh, 0 },
-		{ 0, 0, 255 }
+		{ 0, 0, 1.f }
 	});
 
 	int order[6 * 3] = {
@@ -252,7 +252,7 @@ Polygon s_sphere(float radius, int stacks, int sectors) {
 
 			polygon.points[points_index++] = (Point3D) {
 				{ x, y, z },
-				{ (255 / stacks) * (stacks - i), (255 / stacks) * i, 40 },
+				{ (1.f / stacks) * (stacks - i), (1.f / stacks) * i, 0.15 },
 				{ nx, ny, nz }
 			};
 		}

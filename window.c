@@ -42,7 +42,6 @@ static char depth[] = { '@', '$', '#', '*', '!', '=', ';', ':', '~', '-', ',', '
 
 static Camera *camera;
 static Light *light;
-static Vec3f light_ucolor;
 
 static void clear_buffers() {
 	for (int i = 0; i < view_height; i++) {
@@ -60,9 +59,9 @@ static void flush_buffers() {
 		for (int j = 0; j < view_width; j++) {
 			printf(
 				"\x1b[38;2;%d;%d;%dm%c",
-				frame_buffer[i * view_width + j].color.red,
-				frame_buffer[i * view_width + j].color.green,
-				frame_buffer[i * view_width + j].color.blue,
+				(unsigned char)(frame_buffer[i * view_width + j].color.x * 255.f),
+				(unsigned char)(frame_buffer[i * view_width + j].color.y * 255.f),
+				(unsigned char)(frame_buffer[i * view_width + j].color.z * 255.f),
 				frame_buffer[i * view_width + j].c
 			);
 		}
@@ -121,14 +120,6 @@ void loop(int fps, void (*fn) (unsigned, double, double)) {
 	}
 }
 
-Vec3f color_to_ucolor(Color color) {
-	return (Vec3f) {
-		color.red / 255.f,
-		color.green / 255.f,
-		color.blue / 255.f
-	};
-}
-
 PointPosAttrs create_pos_attrs(Point3D *point, Matrix4x4f *m_model, Matrix4x4f *m_view, Matrix4x4f *m_projection) {
 	Vec4f point_world = { point->position.x, point->position.y, point->position.z, 1.f };
 	point_world = mat4f_multv(m_model, &point_world);
@@ -162,7 +153,6 @@ PointExtraAttrs create_extra_attrs(PointPosAttrs *pos_attrs, Point3D *point, Mat
 	float one_over_w;
 	Vec3f world_pos_over_w;
 	Vec3f world_norm_over_w;
-	Vec3f ucolor = color_to_ucolor(point->color);
 	Vec3f ucolor_over_w;
 	if (fabs(pos_attrs->clip_pos.w) < 1e-6) {
 		one_over_w = 0;
@@ -173,7 +163,7 @@ PointExtraAttrs create_extra_attrs(PointPosAttrs *pos_attrs, Point3D *point, Mat
 		one_over_w = 1.f / pos_attrs->clip_pos.w;
 		world_pos_over_w = vec3f_scale(vec4f_to_vec3f(&pos_attrs->world_pos), one_over_w);
 		world_norm_over_w = vec3f_scale(vec4f_to_vec3f(&normal_world), one_over_w);
-		ucolor_over_w = vec3f_scale(ucolor, one_over_w);
+		ucolor_over_w = vec3f_scale(point->color, one_over_w);
 	}
 
 	PointExtraAttrs attrs = {
@@ -208,7 +198,6 @@ Vec3f create_normal(Vec4f *p0, Vec4f *p1, Vec4f *p2) {
 }
 
 void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Matrix4x4f *m_projection) {
-	light_ucolor = color_to_ucolor(light->color);
 	Matrix4x4f m_model_it = mat4f_inverse_transpose_affine(m_model);
 	int *order = polygon->faces;
 	PointExtraAttrs ea0, ea1, ea2;
@@ -297,31 +286,31 @@ void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Ma
 						Vec3f view_direction = vec3f_normalize(vec3f_sub(camera->position, fragment_world_pos));
 						Vec3f reflect_direction = vec3f_reflect(vec3f_scale(light_direction, -1.f), fragment_world_normal_normalized);
 
-						Vec3f ambient_ucolor = vec3f_scale(light_ucolor, light->ambient_strength);
+						Vec3f ambient_ucolor = vec3f_scale(light->color, light->ambient_strength);
 						float diffuse_strength = MAX(vec3f_dot(fragment_world_normal_normalized, light_direction), 0.f);
-						Vec3f diffuse_ucolor = vec3f_scale(light_ucolor, diffuse_strength);
+						Vec3f diffuse_ucolor = vec3f_scale(light->color, diffuse_strength);
 						float spec = powf(MAX(vec3f_dot(view_direction, reflect_direction), 0.f), 32.f);
-						Vec3f specular_ucolor = vec3f_scale(light_ucolor, light->specular_strength * spec);
+						Vec3f specular_ucolor = vec3f_scale(light->color, light->specular_strength * spec);
 
 						Vec3f final_color = vec3f_mult(
 							vec3f_add(vec3f_add(ambient_ucolor, diffuse_ucolor), specular_ucolor),
 							fragment_color_base);
 
-						color.red = MAX(0, MIN(255, (final_color.x * 255.f)));
-						color.green = MAX(0, MIN(255, (final_color.y * 255.f)));
-						color.blue = MAX(0, MIN(255, (final_color.z * 255.f)));
+						color.x = MAX(0, MIN(1, (final_color.x)));
+						color.y = MAX(0, MIN(1, (final_color.y)));
+						color.z = MAX(0, MIN(1, (final_color.z)));
 
 
 						// NORMAL DEBUGGING
 						// frame_buffer[y * view_width + x].c = depth[0];
-						// frame_buffer[y * view_width + x].color.red   = (((fragment_world_normal_normalized.x + 1.f) / 2.f) * 255.f);
-						// frame_buffer[y * view_width + x].color.green = (((fragment_world_normal_normalized.y + 1.f) / 2.f) * 255.f);
-						// frame_buffer[y * view_width + x].color.blue  = (((fragment_world_normal_normalized.z + 1.f) / 2.f) * 255.f);
+						// frame_buffer[y * view_width + x].color.red   = (fragment_world_normal_normalized.x + 1.f) / 2.f;
+						// frame_buffer[y * view_width + x].color.green = (fragment_world_normal_normalized.y + 1.f) / 2.f;
+						// frame_buffer[y * view_width + x].color.blue  = (fragment_world_normal_normalized.z + 1.f) / 2.f;
 
 						// ASCII LIGHT
 						// short d_index = (1 - diffuse_strength) * (sizeof(depth) - 1);
 						// frame_buffer[y * view_width + x].c = depth[d_index];
-						// frame_buffer[y * view_width + x].color = (Color) { 255, 255, 255 };
+						// frame_buffer[y * view_width + x].color = (Color) { 1, 1, 1 };
 
 						// COLOR
 						frame_buffer[y * view_width + x].c = depth[0];
