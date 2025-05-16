@@ -20,7 +20,6 @@ typedef struct {
 void cleanup();
 void init(int width, int height, Camera *camera, Light *light);
 void loop(int fps, void (*fn) (unsigned, double, double));
-void print_triangle(Point3D *p0, Point3D *p1, Point3D *p2, Matrix4x4f *m_model, Matrix4x4f *m_view, Matrix4x4f *m_projection);
 void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Matrix4x4f *m_projection);
 
 #endif
