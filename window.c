@@ -41,7 +41,9 @@ static char *print_buffer;
 static char depth[] = { '@', '$', '#', '*', '!', '=', ';', ':', '~', '-', ',', '.' };
 
 static Camera *camera;
-static Light *light;
+static Light **lights;
+static int size_lights;
+static int n_lights;
 
 static void clear_buffers() {
 	for (int i = 0; i < view_height; i++) {
@@ -74,11 +76,10 @@ double get_time_ms() {
 	return ((double)timer.tv_nsec / 1000000.0) + ((double)timer.tv_sec * 1000.0);
 }
 
-void init(int width, int height, Camera *i_camera, Light *i_light) {
+void init(int width, int height, Camera *i_camera) {
 	view_width = width;
 	view_height = height;
 	camera = i_camera;
-	light = i_light;
 
 	frame_buffer = malloc(height * width * sizeof(frame_buffer[0]));
 	z_buffer = malloc(height * width * sizeof(z_buffer[0]));
@@ -117,6 +118,47 @@ void loop(int fps, void (*fn) (unsigned, double, double)) {
 		}
 		time_last = time;
 		frame++;
+	}
+}
+
+void add_light(Light *light) {
+	if (size_lights == 0) {
+		lights = calloc(10, sizeof(Light *));
+		size_lights = 10;
+	} else if (n_lights == size_lights) {
+		lights = realloc(lights, (size_lights + 10) * sizeof(Light *));
+		size_lights += 10;
+		for (int i = size_lights - 10; i < size_lights; i++) {
+			lights[i] = NULL;
+		}
+	}
+	for (int i = 0; i < size_lights; i++) {
+		if (lights[i] == NULL) {
+			lights[i] = light;
+			n_lights++;
+			break;
+		}
+	}
+}
+
+void remove_light(Light *light) {
+	for (int i = 0; i < size_lights; i++) {
+		if (lights[i] == light) {
+			lights[i] = NULL;
+			if (i < size_lights - 1) {
+				for (int j = i + 1; j < size_lights; j++) {
+					lights[j-1] = lights[j];
+				}
+				lights[size_lights - 1] = NULL;
+			}
+			n_lights--;
+			break;
+		}
+	}
+
+	if (n_lights < (size_lights - 40) && size_lights > 40) {
+		lights = realloc(lights, size_lights - 20);
+		size_lights -= 20;
 	}
 }
 
@@ -179,22 +221,6 @@ PointExtraAttrs create_extra_attrs(PointPosAttrs *pos_attrs, Point3D *point, Mat
 
 double edge_function(const Vec3f *a, const Vec3f *b, const Vec3f *p) {
 	return (p->x - a->x) * (b->y - a->y) - (p->y - a->y) * (b->x - a->x);
-}
-
-Vec3f create_normal(Vec4f *p0, Vec4f *p1, Vec4f *p2) {
-	Vec3f v0 = vec4f_to_vec3f(p0);
-	Vec3f v1 = vec4f_to_vec3f(p1);
-	Vec3f v2 = vec4f_to_vec3f(p2);
-
-	Vec3f A = vec3f_sub(v1, v0);
-	Vec3f B = vec3f_sub(v2, v0);
-	Vec3f normal = vec3f_normalize((Vec3f) {
-		A.y * B.z - A.z * B.y,
-		A.z * B.x - A.x * B.z,
-		A.x * B.y - A.y * B.x,
-	});
-
-	return normal;
 }
 
 void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Matrix4x4f *m_projection) {
@@ -282,24 +308,31 @@ void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Ma
 						Vec3f fragment_world_normal_normalized = vec3f_normalize(fragment_world_normal);
 						Vec3f fragment_color_base = vec3f_scale(interpolated_ucolor_over_w_raw, one_over_interpolated_one_over_w_raw);
 
-						Vec3f light_direction = vec3f_normalize(vec3f_sub(light->position, fragment_world_pos));
 						Vec3f view_direction = vec3f_normalize(vec3f_sub(camera->position, fragment_world_pos));
-						Vec3f reflect_direction = vec3f_reflect(vec3f_scale(light_direction, -1.f), fragment_world_normal_normalized);
+						float total_diffuse_strength = 0;
+						color.x = 0, color.y = 0, color.z = 0;
+						for (int i = 0; i < n_lights; i++) {
+							Vec3f light_direction = vec3f_normalize(vec3f_sub(lights[i]->position, fragment_world_pos));
+							Vec3f reflect_direction = vec3f_reflect(vec3f_scale(light_direction, -1.f), fragment_world_normal_normalized);
 
-						Vec3f ambient_ucolor = vec3f_scale(light->color, light->ambient_strength);
-						float diffuse_strength = MAX(vec3f_dot(fragment_world_normal_normalized, light_direction), 0.f);
-						Vec3f diffuse_ucolor = vec3f_scale(light->color, diffuse_strength);
-						float spec = powf(MAX(vec3f_dot(view_direction, reflect_direction), 0.f), 32.f);
-						Vec3f specular_ucolor = vec3f_scale(light->color, light->specular_strength * spec);
+							Vec3f ambient_ucolor = vec3f_scale(lights[i]->color, lights[i]->ambient_strength);
+							float diffuse_strength = MAX(vec3f_dot(fragment_world_normal_normalized, light_direction), 0.f);
+							total_diffuse_strength += diffuse_strength;
+							Vec3f diffuse_ucolor = vec3f_scale(lights[i]->color, diffuse_strength);
+							float spec = powf(MAX(vec3f_dot(view_direction, reflect_direction), 0.f), 32.f);
+							Vec3f specular_ucolor = vec3f_scale(lights[i]->color, lights[i]->specular_strength * spec);
 
-						Vec3f final_color = vec3f_mult(
-							vec3f_add(vec3f_add(ambient_ucolor, diffuse_ucolor), specular_ucolor),
-							fragment_color_base);
+							Vec3f final_color = vec3f_mult(
+								vec3f_add(vec3f_add(ambient_ucolor, diffuse_ucolor), specular_ucolor),
+								fragment_color_base);
 
-						color.x = MAX(0, MIN(1, (final_color.x)));
-						color.y = MAX(0, MIN(1, (final_color.y)));
-						color.z = MAX(0, MIN(1, (final_color.z)));
-
+							color.x += final_color.x;
+							color.y += final_color.y;
+							color.z += final_color.z;
+						}
+						color.x = MAX(0, MIN(1, (color.x)));
+						color.y = MAX(0, MIN(1, (color.y)));
+						color.z = MAX(0, MIN(1, (color.z)));
 
 						// NORMAL DEBUGGING
 						// frame_buffer[y * view_width + x].c = depth[0];
@@ -308,7 +341,7 @@ void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Ma
 						// frame_buffer[y * view_width + x].color.blue  = (fragment_world_normal_normalized.z + 1.f) / 2.f;
 
 						// ASCII LIGHT
-						// short d_index = (1 - diffuse_strength) * (sizeof(depth) - 1);
+						// short d_index = (1 - avg_diffuse_strength) * (sizeof(depth) - 1);
 						// frame_buffer[y * view_width + x].c = depth[d_index];
 						// frame_buffer[y * view_width + x].color = (Color) { 1, 1, 1 };
 
@@ -317,7 +350,7 @@ void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Ma
 						frame_buffer[y * view_width + x].color = color;
 
 						// ASCII LIGHT AND COLOR
-						// short d_index = (1 - diffuse_strength) * (sizeof(depth) - 1);
+						// short d_index = (1 - total_diffuse_strength) * (sizeof(depth) - 1);
 						// frame_buffer[y * view_width + x].c = depth[d_index];
 						// frame_buffer[y * view_width + x].color = color;
 

@@ -18,8 +18,12 @@ typedef struct {
 } Light;
 
 void cleanup();
-void init(int width, int height, Camera *camera, Light *light);
+void init(int width, int height, Camera *camera);
 void loop(int fps, void (*fn) (unsigned, double, double));
+
+void add_light(Light *light);
+void remove_light(Light *light);
+
 void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Matrix4x4f *m_projection);
 
 #endif

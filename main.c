@@ -23,7 +23,13 @@ static Camera camera = {
 	.fov_y = 45
 };
 static Light light = {
-	.position = { 0.f, 5.f, 5.f },
+	.position = { 20.f, 0.f, -8.f },
+	.color = { 1.f, 1.f, 1.f },
+	.ambient_strength = 0.1f,
+	.specular_strength = 0.3f
+};
+static Light light2 = {
+	.position = { -20.f, -5.f, -7.f },
 	.color = { 1.f, 1.f, 1.f },
 	.ambient_strength = 0.1f,
 	.specular_strength = 0.3f
@@ -59,7 +65,9 @@ int main(int argc, char *argv[]) {
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 	int width = w.ws_col;
 	int height = w.ws_row;
-	init(width, height, &camera, &light);
+	init(width, height, &camera);
+	add_light(&light);
+	add_light(&light2);
 	m_view = look_at(camera.position, camera.target, camera.up);
 	m_projection = perspective(camera.fov_y,  width / (float) height, near, far);
 
