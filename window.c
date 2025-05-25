@@ -223,6 +223,61 @@ double edge_function(const Vec3f *a, const Vec3f *b, const Vec3f *p) {
 	return (p->x - a->x) * (b->y - a->y) - (p->y - a->y) * (b->x - a->x);
 }
 
+Pixel fragment_shader(Vec3f world_pos, Vec3f world_norm, Vec3f color) {
+	Vec3f view_direction = vec3f_normalize(vec3f_sub(camera->position, world_pos));
+	Vec3f world_norm_normalized = vec3f_normalize(world_norm);
+
+	float total_diffuse_strength = 0;
+	Vec3f final_color;
+	final_color.x = 0, final_color.y = 0, final_color.z = 0;
+	for (int i = 0; i < n_lights; i++) {
+		Vec3f light_direction = vec3f_normalize(vec3f_sub(lights[i]->position, world_pos));
+		Vec3f reflect_direction = vec3f_reflect(vec3f_scale(light_direction, -1.f), world_norm_normalized);
+
+		Vec3f ambient_ucolor = vec3f_scale(lights[i]->color, lights[i]->ambient_strength);
+		float diffuse_strength = MAX(vec3f_dot(world_norm_normalized, light_direction), 0.f);
+		total_diffuse_strength += diffuse_strength;
+		Vec3f diffuse_ucolor = vec3f_scale(lights[i]->color, diffuse_strength);
+		float spec = powf(MAX(vec3f_dot(view_direction, reflect_direction), 0.f), 32.f);
+		Vec3f specular_ucolor = vec3f_scale(lights[i]->color, lights[i]->specular_strength * spec);
+
+		Vec3f light_color = vec3f_mult(
+			vec3f_add(vec3f_add(ambient_ucolor, diffuse_ucolor), specular_ucolor),
+			color);
+
+		final_color.x += light_color.x;
+		final_color.y += light_color.y;
+		final_color.z += light_color.z;
+	}
+	final_color.x = MAX(0, MIN(1, (final_color.x)));
+	final_color.y = MAX(0, MIN(1, (final_color.y)));
+	final_color.z = MAX(0, MIN(1, (final_color.z)));
+
+	Pixel fragment;
+
+	// NORMAL DEBUGGING
+	// fragment.c = depth[0];
+	// fragment.color.x   = (world_norm_normalized.x + 1.f) / 2.f;
+	// fragment.color.y = (world_norm_normalized.y + 1.f) / 2.f;
+	// fragment.color.z  = (world_norm_normalized.z + 1.f) / 2.f;
+
+	// ASCII LIGHT
+	// short d_index = (1 - total_diffuse_strength) * (sizeof(depth) - 1);
+	// fragment.c = depth[d_index];
+	// fragment.color = (Color) { 1, 1, 1 };
+
+	// COLOR
+	fragment.c = depth[0];
+	fragment.color = final_color;
+
+	// ASCII LIGHT AND COLOR
+	// short d_index = (1 - total_diffuse_strength) * (sizeof(depth) - 1);
+	// fragment.c = depth[d_index];
+	// fragment.color = final_color;
+
+	return fragment;
+}
+
 void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Matrix4x4f *m_projection) {
 	Matrix4x4f m_model_it = mat4f_inverse_transpose_affine(m_model);
 	int *order = polygon->faces;
@@ -297,7 +352,6 @@ void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Ma
 							)
 						);
 
-
 						double interpolated_one_over_w_raw = ea0.one_over_w * w0 + ea1.one_over_w * w1 + ea2.one_over_w * w2;
 						if (fabs(interpolated_one_over_w_raw) < 1e-10) {
 							continue;
@@ -305,55 +359,10 @@ void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Ma
 						double one_over_interpolated_one_over_w_raw = 1.0 / interpolated_one_over_w_raw;
 						Vec3f fragment_world_pos = vec3f_scale(interpolated_world_pos_over_w_raw, one_over_interpolated_one_over_w_raw);
 						Vec3f fragment_world_normal = vec3f_scale(interpolated_world_normal_over_w_raw, one_over_interpolated_one_over_w_raw);
-						Vec3f fragment_world_normal_normalized = vec3f_normalize(fragment_world_normal);
 						Vec3f fragment_color_base = vec3f_scale(interpolated_ucolor_over_w_raw, one_over_interpolated_one_over_w_raw);
+						Pixel fragment = fragment_shader(fragment_world_pos, fragment_world_normal, fragment_color_base);
 
-						Vec3f view_direction = vec3f_normalize(vec3f_sub(camera->position, fragment_world_pos));
-						float total_diffuse_strength = 0;
-						color.x = 0, color.y = 0, color.z = 0;
-						for (int i = 0; i < n_lights; i++) {
-							Vec3f light_direction = vec3f_normalize(vec3f_sub(lights[i]->position, fragment_world_pos));
-							Vec3f reflect_direction = vec3f_reflect(vec3f_scale(light_direction, -1.f), fragment_world_normal_normalized);
-
-							Vec3f ambient_ucolor = vec3f_scale(lights[i]->color, lights[i]->ambient_strength);
-							float diffuse_strength = MAX(vec3f_dot(fragment_world_normal_normalized, light_direction), 0.f);
-							total_diffuse_strength += diffuse_strength;
-							Vec3f diffuse_ucolor = vec3f_scale(lights[i]->color, diffuse_strength);
-							float spec = powf(MAX(vec3f_dot(view_direction, reflect_direction), 0.f), 32.f);
-							Vec3f specular_ucolor = vec3f_scale(lights[i]->color, lights[i]->specular_strength * spec);
-
-							Vec3f final_color = vec3f_mult(
-								vec3f_add(vec3f_add(ambient_ucolor, diffuse_ucolor), specular_ucolor),
-								fragment_color_base);
-
-							color.x += final_color.x;
-							color.y += final_color.y;
-							color.z += final_color.z;
-						}
-						color.x = MAX(0, MIN(1, (color.x)));
-						color.y = MAX(0, MIN(1, (color.y)));
-						color.z = MAX(0, MIN(1, (color.z)));
-
-						// NORMAL DEBUGGING
-						// frame_buffer[y * view_width + x].c = depth[0];
-						// frame_buffer[y * view_width + x].color.red   = (fragment_world_normal_normalized.x + 1.f) / 2.f;
-						// frame_buffer[y * view_width + x].color.green = (fragment_world_normal_normalized.y + 1.f) / 2.f;
-						// frame_buffer[y * view_width + x].color.blue  = (fragment_world_normal_normalized.z + 1.f) / 2.f;
-
-						// ASCII LIGHT
-						// short d_index = (1 - avg_diffuse_strength) * (sizeof(depth) - 1);
-						// frame_buffer[y * view_width + x].c = depth[d_index];
-						// frame_buffer[y * view_width + x].color = (Color) { 1, 1, 1 };
-
-						// COLOR
-						frame_buffer[y * view_width + x].c = depth[0];
-						frame_buffer[y * view_width + x].color = color;
-
-						// ASCII LIGHT AND COLOR
-						// short d_index = (1 - total_diffuse_strength) * (sizeof(depth) - 1);
-						// frame_buffer[y * view_width + x].c = depth[d_index];
-						// frame_buffer[y * view_width + x].color = color;
-
+						frame_buffer[y * view_width + x] = fragment;
 						z_buffer[y * view_width + x] = pos.z;
 					}
 				}
@@ -361,3 +370,4 @@ void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Ma
 		}
 	}
 }
+
