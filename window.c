@@ -18,18 +18,15 @@ typedef struct {
 static struct timespec timer;
 
 typedef struct {
-	Vec3f screen_pos;
 	Vec4f clip_pos;
 	Vec4f world_pos;
-} PointPosAttrs;
-
-typedef struct {
 	Vec4f world_norm;
+
 	float one_over_w;
 	Vec3f world_pos_over_w;
 	Vec3f world_norm_over_w;
 	Vec3f ucolor_over_w;
-} PointExtraAttrs;
+} VertexShaderOutput;
 
 static int view_height;
 static int view_width;
@@ -162,54 +159,42 @@ void remove_light(Light *light) {
 	}
 }
 
-PointPosAttrs create_pos_attrs(Point3D *point, Matrix4x4f *m_model, Matrix4x4f *m_view, Matrix4x4f *m_projection) {
-	Vec4f point_world = { point->position.x, point->position.y, point->position.z, 1.f };
-	point_world = mat4f_multv(m_model, &point_world);
-
-	Vec4f point_view = mat4f_multv(m_view, &point_world);
-
-	Vec4f point_clip = mat4f_multv(m_projection, &point_view);
-
-	Vec2f point_ndc;
-	point_ndc.x = point_clip.x / point_clip.w;
-	point_ndc.y = point_clip.y / point_clip.w;
-
-	Vec3f point_screen;
-	point_screen.x = (point_ndc.x + 1.f) / 2.f * view_width;
-	point_screen.y = (1.f - point_ndc.y) / 2.f * view_height;
-	point_screen.z = -point_view.z;
-
-	PointPosAttrs attrs = {
-		.world_pos = point_world,
-		.clip_pos = point_clip,
-		.screen_pos = point_screen,
-	};
-
-	return attrs;
+double edge_function(const Vec3f *a, const Vec3f *b, const Vec3f *p) {
+	return (p->x - a->x) * (b->y - a->y) - (p->y - a->y) * (b->x - a->x);
 }
 
-PointExtraAttrs create_extra_attrs(PointPosAttrs *pos_attrs, Point3D *point, Matrix4x4f *m_model_it) {
-	Vec4f normal_world = { point->normal.x, point->normal.y, point->normal.z, 0.f };
-	normal_world = mat4f_multv(m_model_it, &normal_world);
+VertexShaderOutput vertex_shader(Point3D *point, Matrix4x4f *m_model, Matrix4x4f *m_model_it, Matrix4x4f *m_view, Matrix4x4f *m_projection) {
+	Vec4f world_pos = { point->position.x, point->position.y, point->position.z, 1.f };
+	world_pos = mat4f_multv(m_model, &world_pos);
+
+	Vec4f point_view = mat4f_multv(m_view, &world_pos);
+
+	Vec4f clip_pos = mat4f_multv(m_projection, &point_view);
+
+	Vec4f world_norm = { point->normal.x, point->normal.y, point->normal.z, 0.f };
+	world_norm = mat4f_multv(m_model_it, &world_norm);
 
 	float one_over_w;
 	Vec3f world_pos_over_w;
 	Vec3f world_norm_over_w;
 	Vec3f ucolor_over_w;
-	if (fabs(pos_attrs->clip_pos.w) < 1e-6) {
+	if (fabs(clip_pos.w) < 1e-6) {
 		one_over_w = 0;
 		world_pos_over_w = (Vec3f) { 0, 0, 0 };
 		world_norm_over_w = (Vec3f) { 0, 0, 0 };
 		ucolor_over_w = (Vec3f) { 0, 0, 0 };
 	} else {
-		one_over_w = 1.f / pos_attrs->clip_pos.w;
-		world_pos_over_w = vec3f_scale(vec4f_to_vec3f(&pos_attrs->world_pos), one_over_w);
-		world_norm_over_w = vec3f_scale(vec4f_to_vec3f(&normal_world), one_over_w);
+		one_over_w = 1.f / clip_pos.w;
+		world_pos_over_w = vec3f_scale(vec4f_to_vec3f(&world_pos), one_over_w);
+		world_norm_over_w = vec3f_scale(vec4f_to_vec3f(&world_norm), one_over_w);
 		ucolor_over_w = vec3f_scale(point->color, one_over_w);
 	}
 
-	PointExtraAttrs attrs = {
-		.world_norm = normal_world,
+	VertexShaderOutput attrs = {
+		.world_pos = world_pos,
+		.clip_pos = clip_pos,
+		.world_norm = world_norm,
+
 		.one_over_w = one_over_w,
 		.world_norm_over_w = world_norm_over_w,
 		.world_pos_over_w = world_pos_over_w,
@@ -217,10 +202,6 @@ PointExtraAttrs create_extra_attrs(PointPosAttrs *pos_attrs, Point3D *point, Mat
 	};
 
 	return attrs;
-}
-
-double edge_function(const Vec3f *a, const Vec3f *b, const Vec3f *p) {
-	return (p->x - a->x) * (b->y - a->y) - (p->y - a->y) * (b->x - a->x);
 }
 
 Pixel fragment_shader(Vec3f world_pos, Vec3f world_norm, Vec3f color) {
@@ -278,81 +259,84 @@ Pixel fragment_shader(Vec3f world_pos, Vec3f world_norm, Vec3f color) {
 	return fragment;
 }
 
+Vec3f clip_to_screen(Vec4f clip) {
+	Vec3f ndc, screen;
+	ndc.x = clip.x / clip.w;
+	ndc.y = clip.y / clip.w;
+	ndc.z = clip.z / clip.w;
+	screen.x = (ndc.x + 1.f) / 2.f * view_width;
+	screen.y = (1.f - ndc.y) / 2.f * view_height;
+	screen.z = (clip.z + 1.f) / 2.f;
+	return screen;
+}
+
 void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Matrix4x4f *m_projection) {
 	Matrix4x4f m_model_it = mat4f_inverse_transpose_affine(m_model);
 	int *order = polygon->faces;
-	PointExtraAttrs ea0, ea1, ea2;
-	PointPosAttrs pa0, pa1, pa2;
-	Point3D *p0, *p1, *p2;
+	VertexShaderOutput v0, v1, v2;
+	Vec3f screen_pos0, screen_pos1, screen_pos2;
 	Vec3f pos;
-	Color color;
-	for (int i = 0; i < polygon->n_faces; i++, order += 3) {
-		p0 = polygon->points + order[0];
-		p1 = polygon->points + order[1];
-		p2 = polygon->points + order[2];
-		pa0 = create_pos_attrs(p0, m_model, m_view, m_projection);
-		pa1 = create_pos_attrs(p1, m_model, m_view, m_projection);
-		pa2 = create_pos_attrs(p2, m_model, m_view, m_projection);
 
-		double area = edge_function(&pa0.screen_pos, &pa1.screen_pos, &pa2.screen_pos);
+	for (int i = 0; i < polygon->n_faces; i++, order += 3) {
+		v0 = vertex_shader(polygon->points + order[0], m_model, &m_model_it, m_view, m_projection);
+		v1 = vertex_shader(polygon->points + order[1], m_model, &m_model_it, m_view, m_projection);
+		v2 = vertex_shader(polygon->points + order[2], m_model, &m_model_it, m_view, m_projection);
+		screen_pos0 = clip_to_screen(v0.clip_pos);
+		screen_pos1 = clip_to_screen(v1.clip_pos);
+		screen_pos2 = clip_to_screen(v2.clip_pos);
+
+		double area = edge_function(&screen_pos0, &screen_pos1, &screen_pos2);
 		if (area < 1e-6) {
 			continue;
 		}
 
-		double p_min_x = MIN(MIN(pa0.screen_pos.x, pa1.screen_pos.x), pa2.screen_pos.x);
-		double p_max_x = MAX(MAX(pa0.screen_pos.x, pa1.screen_pos.x), pa2.screen_pos.x);
-		double p_min_y = MIN(MIN(pa0.screen_pos.y, pa1.screen_pos.y), pa2.screen_pos.y);
-		double p_max_y = MAX(MAX(pa0.screen_pos.y, pa1.screen_pos.y), pa2.screen_pos.y);
+		double p_min_x = MIN(MIN(screen_pos0.x, screen_pos1.x), screen_pos2.x);
+		double p_max_x = MAX(MAX(screen_pos0.x, screen_pos1.x), screen_pos2.x);
+		double p_min_y = MIN(MIN(screen_pos0.y, screen_pos1.y), screen_pos2.y);
+		double p_max_y = MAX(MAX(screen_pos0.y, screen_pos1.y), screen_pos2.y);
 
 		unsigned int min_x = MAX(0, MIN(view_width - 1, floor(p_min_x)));
 		unsigned int max_x = MAX(0, MIN(view_width - 1, floor(p_max_x)));
 		unsigned int min_y = MAX(0, MIN(view_height - 1, floor(p_min_y)));
 		unsigned int max_y = MAX(0, MIN(view_height - 1, floor(p_max_y)));
-		char processed_extra_attrs = 0;
 		for (unsigned int y = min_y; y <= max_y; y++) {
 			for (unsigned int x = min_x; x <= max_x; x++) {
 				pos.x = x;
 				pos.y = y;
-				double w0 = edge_function(&pa1.screen_pos, &pa2.screen_pos, &pos);
-				double w1 = edge_function(&pa2.screen_pos, &pa0.screen_pos, &pos);
-				double w2 = edge_function(&pa0.screen_pos, &pa1.screen_pos, &pos);
+				double w0 = edge_function(&screen_pos1, &screen_pos2, &pos);
+				double w1 = edge_function(&screen_pos2, &screen_pos0, &pos);
+				double w2 = edge_function(&screen_pos0, &screen_pos1, &pos);
 				if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
 					w0 /= area;
 					w1 /= area;
 					w2 /= area;
-					pos.z = pa0.screen_pos.z * w0 + pa1.screen_pos.z * w1 + pa2.screen_pos.z * w2;
+					pos.z = screen_pos0.z * w0 + screen_pos1.z * w1 + screen_pos2.z * w2;
 					if (pos.z < z_buffer[y * view_width + x]) {
-						if (!processed_extra_attrs) {
-							processed_extra_attrs = 1;
-							ea0 = create_extra_attrs(&pa0, p0, &m_model_it);
-							ea1 = create_extra_attrs(&pa1, p1, &m_model_it);
-							ea2 = create_extra_attrs(&pa2, p2, &m_model_it);
-						}
 						Vec3f interpolated_world_pos_over_w_raw = vec3f_add(
-							vec3f_scale(ea0.world_pos_over_w, w0),
+							vec3f_scale(v0.world_pos_over_w, w0),
 							vec3f_add(
-								vec3f_scale(ea1.world_pos_over_w, w1),
-								vec3f_scale(ea2.world_pos_over_w, w2)
+								vec3f_scale(v1.world_pos_over_w, w1),
+								vec3f_scale(v2.world_pos_over_w, w2)
 							)
 						);
 
 						Vec3f interpolated_world_normal_over_w_raw = vec3f_add(
-							vec3f_scale(ea0.world_norm_over_w, w0),
+							vec3f_scale(v0.world_norm_over_w, w0),
 							vec3f_add(
-								vec3f_scale(ea1.world_norm_over_w, w1),
-								vec3f_scale(ea2.world_norm_over_w, w2)
+								vec3f_scale(v1.world_norm_over_w, w1),
+								vec3f_scale(v2.world_norm_over_w, w2)
 							)
 						);
 
 						Vec3f interpolated_ucolor_over_w_raw = vec3f_add(
-							vec3f_scale(ea0.ucolor_over_w, w0),
+							vec3f_scale(v0.ucolor_over_w, w0),
 							vec3f_add(
-								vec3f_scale(ea1.ucolor_over_w, w1),
-								vec3f_scale(ea2.ucolor_over_w, w2)
+								vec3f_scale(v1.ucolor_over_w, w1),
+								vec3f_scale(v2.ucolor_over_w, w2)
 							)
 						);
 
-						double interpolated_one_over_w_raw = ea0.one_over_w * w0 + ea1.one_over_w * w1 + ea2.one_over_w * w2;
+						double interpolated_one_over_w_raw = v0.one_over_w * w0 + v1.one_over_w * w1 + v2.one_over_w * w2;
 						if (fabs(interpolated_one_over_w_raw) < 1e-10) {
 							continue;
 						}
