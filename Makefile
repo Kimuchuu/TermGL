@@ -20,7 +20,7 @@ window:
 basic.o: 3c
 	gcc -c -o out/basic.o -Wall -g examples/basic.c
 basic: basic.o
-	gcc -o out/basic -Wall -g -Lout -l3c -lm out/basic.o out/lib3c.a
+	gcc -o out/basic -Wall -g -Lout -lm out/basic.o -l3c
 
 # Utils
 clean:
