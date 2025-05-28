@@ -1,6 +1,9 @@
 #ifndef LIB3C_MATH_H
 #define LIB3C_MATH_H
 
+#define MIN(x, y) (x < y ? x : y)
+#define MAX(x, y) (x > y ? x : y)
+
 typedef struct { float x, y; } Vec2f;
 typedef struct { float x, y, z; } Vec3f;
 typedef struct { float x, y, z, w; } Vec4f;

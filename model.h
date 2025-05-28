@@ -6,6 +6,11 @@
 typedef Vec3f Color;
 
 typedef struct {
+	int c;
+	Color color;
+} Pixel;
+
+typedef struct {
 	Vec3f position;
 	Color color;
 	Vec3f normal;
