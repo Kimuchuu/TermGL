@@ -50,7 +50,7 @@ void draw(unsigned int frame, double time, double delta) {
 		Matrix4x4f model = mat4f_identity(1);
 		model = mat4f_mult(&model, &translate);
 		model = mat4f_mult(&model, &rotate);
-		print_polygon(&objects[i].polygon, &model, &m_view, &m_projection, default_fragment_shader);
+		print_polygon(&objects[i].polygon, &model, &m_view, &m_projection, fragment_shader_color);
 	}
 }
 
