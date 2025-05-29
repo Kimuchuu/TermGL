@@ -23,6 +23,9 @@ Vec3f vec3f_scale(Vec3f v1, float s);
 Vec3f vec3f_sub(Vec3f v1, Vec3f v2);
 Vec4f vec3f_to_vec4f(Vec3f *, float);
 
+Vec4f vec4f_add(Vec4f v1, Vec4f v2);
+Vec4f vec4f_scale(Vec4f v1, float s);
+Vec4f vec4f_sub(Vec4f v1, Vec4f v2);
 Vec3f vec4f_to_vec3f(Vec4f *);
 
 Vec3f      mat3f_multv(Matrix3x3f *matrix, Vec3f *vector);

@@ -50,7 +50,10 @@ void draw(unsigned int frame, double time, double delta) {
 		Matrix4x4f model = mat4f_identity(1);
 		model = mat4f_mult(&model, &translate);
 		model = mat4f_mult(&model, &rotate);
-		print_polygon(&objects[i].polygon, &model, &m_view, &m_projection, fragment_shader_color);
+		Matrix4x4f model_it = mat4f_inverse_transpose_affine(&model);
+
+		SimpleShaderData data = { &model, &model_it, &m_view, &m_projection };
+		print_polygon(&objects[i].polygon, &data, vertex_shader_simple, fragment_shader_color);
 	}
 }
 
@@ -67,6 +70,7 @@ int main(int argc, char *argv[]) {
 	int width = w.ws_col;
 	int height = w.ws_row;
 	init_window(width, height);
+	init_3d();
 	init_camera(&camera);
 	add_light(&light);
 	add_light(&light2);

@@ -3,26 +3,30 @@
 
 #include "model.h"
 
-typedef struct {
-	Vec3f position;
-	Vec3f target;
-	Vec3f up;
-	float fov_y;
-} Camera;
+typedef enum {
+	VEC4F
+} ShaderAttributeType;
 
 typedef struct {
-	Vec3f position;
-	Color color;
-	float ambient_strength;
-	float specular_strength;
-} Light;
+	ShaderAttributeType type;
+	union {
+		Vec4f vec4f;
+	} value;
+} ShaderAttribute;
 
-typedef Pixel (*FragmentShader)(Vec3f color, Vec3f world_pos, Vec3f world_norm, Camera *camera, Light **lights, int n_lights);
+typedef struct {
+	int n;
+	ShaderAttribute *attributes;
+} ShaderAttributes;
 
-void init_camera(Camera *i_camera);
+typedef struct {
+	Vec4f clip_pos;
+} VertexShaderOutput;
 
-void add_light(Light *light);
-void remove_light(Light *light);
-void print_polygon(Polygon *polygon, Matrix4x4f *m_model, Matrix4x4f *m_view, Matrix4x4f *m_projection, FragmentShader fragment_shader);
+typedef Pixel (*FragmentShader)(ShaderAttributes *in, void *data);
+typedef VertexShaderOutput (*VertexShader)(Point3D *point, void *data, ShaderAttributes *out);
+
+void init_3d(void);
+void print_polygon(Polygon *polygon, void *data, VertexShader vertex_shader, FragmentShader fragment_shader);
 
 #endif

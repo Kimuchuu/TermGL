@@ -86,6 +86,15 @@ Vec4f vec4f_add(Vec4f v1, Vec4f v2) {
 	return result;
 }
 
+Vec4f vec4f_scale(Vec4f v1, float s) {
+	Vec4f result;
+	result.x = v1.x * s;
+	result.y = v1.y * s;
+	result.z = v1.z * s;
+	result.w = v1.w * s;
+	return result;
+}
+
 Vec4f vec4f_sub(Vec4f v1, Vec4f v2) {
 	Vec4f result;
 	result.x = v1.x - v2.x;
