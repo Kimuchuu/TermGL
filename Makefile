@@ -17,10 +17,10 @@ window:
 	ar rcs out/lib3c.a out/math.o out/internal.o out/window.o out/3d.o out/simple3d.o out/shapes.o out/ply.o
 
 # Examples
-basic.o: 3c
-	gcc -c -o out/basic.o -Wall -g examples/basic.c
-basic: basic.o
-	gcc -o out/basic -Wall -g -Lout -lm out/basic.o -l3c
+basic: 3c
+	gcc -o out/basic -Wall -g -Lout -lm examples/basic.c -l3c
+spiral: 3c
+	gcc -o out/spiral -Wall -g -Lout -lm examples/spiral.c -l3c
 
 # Utils
 clean:
