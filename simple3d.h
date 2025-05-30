@@ -31,10 +31,10 @@ void init_camera(Camera *);
 void add_light(Light *);
 void remove_light(Light *);
 
-Pixel fragment_shader_ascii(ShaderAttributes *in, void *data);
-Pixel fragment_shader_ascii_color(ShaderAttributes *in, void *data);
-Pixel fragment_shader_color(ShaderAttributes *in, void *data);
-Pixel fragment_shader_debug(ShaderAttributes *in, void *data);
+Pixel fragment_shader_ascii(FragmentShaderInput *input, ShaderAttributes *in, void *data);
+Pixel fragment_shader_ascii_color(FragmentShaderInput *input, ShaderAttributes *in, void *data);
+Pixel fragment_shader_color(FragmentShaderInput *input, ShaderAttributes *in, void *data);
+Pixel fragment_shader_debug(FragmentShaderInput *input, ShaderAttributes *in, void *data);
 
 VertexShaderOutput vertex_shader_simple(Point3D *point, void *data, ShaderAttributes *out);
 

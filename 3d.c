@@ -18,26 +18,29 @@ void init_3d() {
 	attr_frag.attributes = malloc(sizeof(ShaderAttribute) * MAX_ATTRIBUTES);
 }
 
-double edge_function(const Vec3f *a, const Vec3f *b, const Vec3f *p) {
+double edge_function(const Vec4f *a, const Vec4f *b, const Vec4f *p) {
 	return (p->x - a->x) * (b->y - a->y) - (p->y - a->y) * (b->x - a->x);
 }
 
-Vec3f clip_to_screen(Vec4f clip) {
-	Vec3f ndc, screen;
+Vec4f clip_to_screen(Vec4f clip) {
+	Vec3f ndc;
+	Vec4f screen;
 	ndc.x = clip.x / clip.w;
 	ndc.y = clip.y / clip.w;
 	ndc.z = clip.z / clip.w;
 	screen.x = (ndc.x + 1.f) / 2.f * view_width;
 	screen.y = (1.f - ndc.y) / 2.f * view_height;
-	screen.z = (clip.z + 1.f) / 2.f;
+	screen.z = (ndc.z + 1.f) / 2.f;
+	screen.w = 1.f / clip.w;
 	return screen;
 }
 
 void print_polygon(Polygon *polygon, void *data, VertexShader vertex_shader, FragmentShader fragment_shader) {
 	int *order = polygon->faces;
 	VertexShaderOutput v0, v1, v2;
-	Vec3f screen_pos0, screen_pos1, screen_pos2;
-	Vec3f pos;
+	FragmentShaderInput fragment_input;
+	Vec4f screen_pos0, screen_pos1, screen_pos2;
+	Vec4f pos;
 
 	for (int i = 0; i < polygon->n_faces; i++, order += 3) {
 		attr0.n = 0, attr1.n = 0, attr2.n = 0;
@@ -79,6 +82,7 @@ void print_polygon(Polygon *polygon, void *data, VertexShader vertex_shader, Fra
 					w2 /= area;
 					pos.z = screen_pos0.z * w0 + screen_pos1.z * w1 + screen_pos2.z * w2;
 					if (pos.z < z_buffer[y * view_width + x]) {
+						pos.w = screen_pos0.w * w0 + screen_pos1.w * w1 + screen_pos2.w * w2;
 						double interpolated_one_over_w_raw = one_over_w0 * w0 + one_over_w1 * w1 + one_over_w2 * w2;
 						if (fabs(interpolated_one_over_w_raw) < 1e-10) {
 							continue;
@@ -101,7 +105,8 @@ void print_polygon(Polygon *polygon, void *data, VertexShader vertex_shader, Fra
 							attr_frag.attributes[i].value.vec4f = vec4f_scale(interpolated_v_over_w_raw, one_over_interpolated_one_over_w_raw);
 						}
 
-						Pixel fragment = fragment_shader(&attr_frag, data);
+						fragment_input.screen_pos = pos;
+						Pixel fragment = fragment_shader(&fragment_input, &attr_frag, data);
 
 						frame_buffer[y * view_width + x] = fragment;
 						z_buffer[y * view_width + x] = pos.z;

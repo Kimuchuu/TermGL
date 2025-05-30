@@ -55,7 +55,7 @@ void remove_light(Light *light) {
 	}
 }
 
-Pixel fragment_shader_ascii(ShaderAttributes *in, void *data) {
+Pixel fragment_shader_ascii(FragmentShaderInput *input, ShaderAttributes *in, void *data) {
 	Vec3f world_pos = vec4f_to_vec3f(&in->attributes[1].value.vec4f);
 	Vec3f world_norm = vec4f_to_vec3f(&in->attributes[2].value.vec4f);
 	Vec3f world_norm_normalized = vec3f_normalize(world_norm);
@@ -73,7 +73,7 @@ Pixel fragment_shader_ascii(ShaderAttributes *in, void *data) {
 	return fragment;
 }
 
-Pixel fragment_shader_ascii_color(ShaderAttributes *in, void *data) {
+Pixel fragment_shader_ascii_color(FragmentShaderInput *input, ShaderAttributes *in, void *data) {
 	Color color = vec4f_to_vec3f(&in->attributes[0].value.vec4f);
 	Vec3f world_pos = vec4f_to_vec3f(&in->attributes[1].value.vec4f);
 	Vec3f world_norm = vec4f_to_vec3f(&in->attributes[2].value.vec4f);
@@ -112,7 +112,7 @@ Pixel fragment_shader_ascii_color(ShaderAttributes *in, void *data) {
 	return fragment;
 }
 
-Pixel fragment_shader_color(ShaderAttributes *in, void *data) {
+Pixel fragment_shader_color(FragmentShaderInput *input, ShaderAttributes *in, void *data) {
 	Color color = vec4f_to_vec3f(&in->attributes[0].value.vec4f);
 	Vec3f world_pos = vec4f_to_vec3f(&in->attributes[1].value.vec4f);
 	Vec3f world_norm = vec4f_to_vec3f(&in->attributes[2].value.vec4f);
@@ -148,7 +148,7 @@ Pixel fragment_shader_color(ShaderAttributes *in, void *data) {
 	return fragment;
 }
 
-Pixel fragment_shader_debug(ShaderAttributes *in, void *data) {
+Pixel fragment_shader_debug(FragmentShaderInput *input, ShaderAttributes *in, void *data) {
 	Vec3f world_norm = vec4f_to_vec3f(&in->attributes[2].value.vec4f);
 	Vec3f world_norm_normalized = vec3f_normalize(world_norm);
 	Pixel fragment;

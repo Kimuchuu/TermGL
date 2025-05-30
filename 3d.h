@@ -20,10 +20,14 @@ typedef struct {
 } ShaderAttributes;
 
 typedef struct {
+	Vec4f screen_pos;
+} FragmentShaderInput;
+
+typedef struct {
 	Vec4f clip_pos;
 } VertexShaderOutput;
 
-typedef Pixel (*FragmentShader)(ShaderAttributes *in, void *data);
+typedef Pixel (*FragmentShader)(FragmentShaderInput *input, ShaderAttributes *in, void *data);
 typedef VertexShaderOutput (*VertexShader)(Point3D *point, void *data, ShaderAttributes *out);
 
 void init_3d(void);
