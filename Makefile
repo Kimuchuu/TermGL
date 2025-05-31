@@ -21,6 +21,8 @@ basic: 3c
 	gcc -o out/basic -Wall -g -Lout -lm examples/basic.c -l3c
 spiral: 3c
 	gcc -o out/spiral -Wall -g -Lout -lm examples/spiral.c -l3c
+kishimisu: 3c
+	gcc -o out/kishimisu -Wall -g -Lout -lm examples/kishimisu.c -l3c
 
 # Utils
 clean:

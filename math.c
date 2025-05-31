@@ -11,6 +11,23 @@ float radians(float degrees) {
 
 
 //
+// scale
+//
+
+Vec2f vec2f_scale(Vec2f v1, float f) {
+	v1.x *= f;
+	v1.y *= f;
+	return v1;
+}
+
+Vec2f vec2f_sub(Vec2f v1, Vec2f v2) {
+	v1.x -= v2.x;
+	v1.y -= v2.y;
+	return v1;
+}
+
+
+//
 // vec3f
 //
 

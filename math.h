@@ -13,6 +13,9 @@ typedef struct { float m[4][4]; } Matrix4x4f;
 
 float radians(float);
 
+Vec2f vec2f_scale(Vec2f v1, float f);
+Vec2f vec2f_sub(Vec2f v1, Vec2f v2);
+
 Vec3f vec3f_add(Vec3f v1, Vec3f v2);
 float vec3f_dot(Vec3f v1, Vec3f v2);
 Vec3f vec3f_cross(Vec3f v1, Vec3f v2);
