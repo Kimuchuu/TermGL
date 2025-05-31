@@ -18,8 +18,8 @@ typedef struct {
 static double near = 0.1;
 static double far = 100;
 static Camera camera = {
-	.position = { 0.0, 0.0, 3.0 },
-	.target = { 0.0, 0.0, 0.0 },
+	.position = { 0.0, 1.0, 3.0 },
+	.target = { 0.0, 1.0, 0.0 },
 	.up = { 0.0, 1.0, 0.0 },
 	.fov_y = 45
 };
