@@ -24,7 +24,7 @@ Fragment shader
 
 <details>
     <summary>Spinning pyramids</summary>
-    ![Spinning pyramids](./assets/pyramids.gif)
+    <img alt="Spinning pyramids" src="./assets/pyramids.gif">
 </details>
 
 
