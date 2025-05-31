@@ -1,5 +1,3 @@
-![Spinning pyramids](./assets/pyramids.gif)
-
 # WIP
 
 Simple 3D renderer for the terminal
@@ -7,10 +5,26 @@ Simple 3D renderer for the terminal
 ## TODO
 
 - Better rotations
-- Better APIs for defining shapes and light
-- Implement lighting
-    - Character density version
-    - True Color version
-- Shapes
-    - Circle
-    - Square
+- More examples
+- Performance
+
+## Examples
+
+3D shapes
+
+![Spinning 3D Shapes](./assets/basic.gif)
+
+
+Fragment shader
+
+![Dynamic fragment shader](./assets/kishimisu.gif)
+
+
+### More examples
+
+<details>
+    <summary>Spinning pyramids</summary>
+    ![Spinning pyramids](./assets/pyramids.gif)
+</details>
+
+
