@@ -106,6 +106,7 @@ void print_polygon(Polygon *polygon, void *data, VertexShader vertex_shader, Fra
 						}
 
 						fragment_input.screen_pos = pos;
+						fragment_input.screen_pos.y = view_height - pos.y;
 						Pixel fragment = fragment_shader(&fragment_input, &attr_frag, data);
 
 						frame_buffer[y * view_width + x] = fragment;
