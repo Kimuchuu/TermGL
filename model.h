@@ -14,6 +14,7 @@ typedef struct {
 	Vec3f position;
 	Color color;
 	Vec3f normal;
+	Vec2f uv;
 } Point3D;
 
 typedef struct {

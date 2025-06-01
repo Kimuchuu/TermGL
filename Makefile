@@ -23,6 +23,8 @@ spiral: 3c
 	gcc -o out/spiral -Wall -g -Lout -lm examples/spiral.c -l3c
 kishimisu: 3c
 	gcc -o out/kishimisu -Wall -g -Lout -lm examples/kishimisu.c -l3c
+texture: 3c
+	gcc -o out/texture -Wall -g -Lout -lm examples/texture.c -l3c
 
 # Utils
 clean:

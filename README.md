@@ -7,6 +7,11 @@ Simple 3D renderer for the terminal
 - Better rotations
 - More examples
 - Performance
+- Textures
+
+- Make CPU usage graph --ooOOo-OOoo--oo--
+- Make cols/rows expanded to pixel width/height?
+- Make 2D GUI thing
 
 ## Examples
 
@@ -25,6 +30,11 @@ Fragment shader
 <details>
     <summary>Spinning pyramids</summary>
     <img alt="Spinning pyramids" src="./assets/pyramids.gif">
+</details>
+
+<details>
+    <summary>Texture mapped cubed</summary>
+    <img alt="Spinning cube with smiley face" src="./assets/awesomecube.gif">
 </details>
 
 
