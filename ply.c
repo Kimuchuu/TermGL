@@ -99,7 +99,7 @@ Polygon parse_ply(FILE *fp) {
 	while (section_count++ < obj.n_points && getline(&lineptr, &n, fp) != -1) {
 		property_index = 0;
 		char *end, *start = lineptr;
-		while ((end = strchr(start, ' ')) != NULL) {
+		while ((end = strchr(start, ' ')) != NULL || (end = strchr(start, '\n')) != NULL) {
 			*end = '\0';
 			if (i_x == property_index) {
 				x = atof(start);
