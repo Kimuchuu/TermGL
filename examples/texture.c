@@ -45,7 +45,7 @@ Pixel fragment_shader(FragmentShaderInput *input, ShaderAttributes *in, void *da
 	Vec4f uv = in->attributes[0].value.vec4f;
 
 	int x = (int)(uv.x * (image_width - 1));
-	int y = image_height - (int)(uv.y * (image_height - 1));
+	int y = (image_height - 1) - (int)(uv.y * (image_height - 1));
 	int index = (y * image_width + x) * bpp;
 	float r = image[index + 0] / 255.0f;
 	float g = image[index + 1] / 255.0f;
