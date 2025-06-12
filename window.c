@@ -18,7 +18,7 @@ static void clear_buffers() {
 }
 
 static void flush_buffers() {
-	printf("\x1b[H\x1b[0J");
+	printf("\x1b[?2026h\x1b[H\x1b[0J");
 	for (int i = 0; i < view_height; i++) {
 		printf("\x1b[%d;1H", i + 1);
 		for (int j = 0; j < view_width; j++) {
@@ -31,6 +31,7 @@ static void flush_buffers() {
 			);
 		}
 	}
+	printf("\x1b[?2026l");
 	fflush(stdout);
 }
 
