@@ -115,18 +115,25 @@ int main(int argc, char *argv[]) {
 
 	struct winsize w;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-	int width = w.ws_col;
-	int height = w.ws_row;
-	init_window(width, height);
+	int cols = w.ws_col;
+	int rows = w.ws_row;
+	int width = w.ws_xpixel;
+	int height = w.ws_ypixel;
+	if (width == 0 || height == 0) {
+		width = cols;
+		height = rows * 2;
+	}
+	init_window(cols, rows);
 	init_3d();
 
-	shader_data.pixel_resolution.x = w.ws_xpixel;
-	shader_data.pixel_resolution.y = w.ws_ypixel;
-	shader_data.pixel_aspect_ratio = (float) w.ws_xpixel / w.ws_ypixel;
 
-	shader_data.resolution.x = width;
-	shader_data.resolution.y = height;
-	shader_data.aspect_ratio = (float) width / height;
+	shader_data.pixel_resolution.x = width;
+	shader_data.pixel_resolution.y = height;
+	shader_data.pixel_aspect_ratio = (float) width / height;
+
+	shader_data.resolution.x = cols;
+	shader_data.resolution.y = rows;
+	shader_data.aspect_ratio = (float) cols / rows;
 
 	polygon.n_points = 4;
 	polygon.points = (Point3D[]) {

@@ -104,6 +104,10 @@ int main(int argc, char *argv[]) {
 	int rows = w.ws_row;
 	int width = w.ws_xpixel;
 	int height = w.ws_ypixel;
+	if (width == 0 || height == 0) {
+		width = cols;
+		height = rows * 2;
+	}
 	init_window(cols, rows);
 	init_3d();
 	init_camera(&camera);
